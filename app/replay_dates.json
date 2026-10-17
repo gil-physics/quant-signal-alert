@@ -1,0 +1,11 @@
+{
+  "note": "Replay dates for the app. Every date is out-of-sample for the models it shows (risk models trained through 2026-02-28, touch grades from out-of-fold predictions). Labels are the one-line names shown on the home screen; pick them from the exported day stats.",
+  "dates": [
+    {"date": "2026-04-28", "label": "조용한 하루"},
+    {"date": "2026-04-08", "label": "급등한 날"},
+    {"date": "2026-06-08", "label": "급락한 날"},
+    {"date": "2026-06-09", "label": "급락 다음 날 반등"},
+    {"date": "2026-06-19", "label": "크게 출렁인 날"},
+    {"date": "2026-07-02", "label": "폭락한 날"}
+  ]
+}

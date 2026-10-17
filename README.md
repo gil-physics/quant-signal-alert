@@ -1285,6 +1285,26 @@ parity + band thresholds) must pass before any live wiring; v1.1 stays live.**
 
 ---
 
+## Replay app (app/)
+
+A mobile-first web app that re-plays a past trading day minute by minute and shows the
+alerts the realtime runners would have printed, terminal-log style (long+short trend
+lines and MA5x20 touch lines for 000660), with each alert's outcome revealed only after
+its window has passed. Nothing is recomputed in the browser:
+`scripts/export_replay_bundle.py` runs the runners' own replay code (captured
+`_process_minute` lines; TouchAlertRunner records with out-of-fold grades), pins the
+cross-section to the 20-symbol training universe, and writes `app/public/data/`. Every
+replay date is out-of-sample for the models it shows. Parity: exported raw lines match
+the runner's stdout line for line (2026-06-19: 361/361 trend, 22/22 touch).
+Logic in `src/replay_export.py` (tests: `tests/test_replay_export.py`); app, build and
+Firebase Hosting deploy steps in [app/README.md](app/README.md).
+
+```powershell
+..\Python311-64\python.exe scripts\export_replay_bundle.py     # every date in app/replay_dates.json
+```
+
+---
+
 ## Legacy single-symbol components
 
 These predate the unified `bars_1m` store and write to the **older** single-symbol

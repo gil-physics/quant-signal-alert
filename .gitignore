@@ -26,3 +26,12 @@ venv/
 .idea/
 Thumbs.db
 desktop.ini
+
+# Replay app (app/): dependencies and build output; exported data in app/public/data is kept
+/app/node_modules/
+/app/dist/
+/app/dev-dist/
+
+# Local tool config
+/.claude/
+/.firebase/

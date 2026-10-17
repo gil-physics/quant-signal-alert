@@ -1,0 +1,166 @@
+@import "tailwindcss";
+
+/* Colour follows the Korean market convention: red = up, blue = down. */
+:root {
+  --bg: #f3f4f6;
+  --surface: #ffffff;
+  --sunk: #eceef2;
+  --ink: #131820;
+  --muted: #5f6b7a;
+  --line: #e1e4ea;
+  --up: #e0343e;
+  --down: #2e6be6;
+  --neutral: #7c8796;
+  --touch: #d9860b;
+  --risk-high: #e2620f;
+  --risk-low: #1f9a63;
+  --term-bg: #0c1016;
+  --term-ink: #d7dee7;
+  --term-muted: #6c7787;
+  --term-line: #1b222c;
+  --term-hover: #141a22;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e1116;
+    --surface: #161b22;
+    --sunk: #1d232c;
+    --ink: #e7ebf0;
+    --muted: #8d97a5;
+    --line: #262d37;
+    --up: #ff5d66;
+    --down: #5c9dff;
+    --neutral: #8d97a5;
+    --touch: #f5a524;
+    --risk-high: #fb8a3c;
+    --risk-low: #3cc68a;
+    color-scheme: dark;
+  }
+}
+
+@theme {
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, "Apple SD Gothic Neo",
+    "Malgun Gothic", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Pretendard Variable", "D2Coding", ui-monospace, monospace;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-sunk: var(--sunk);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-up: var(--up);
+  --color-down: var(--down);
+  --color-neutral: var(--neutral);
+  --color-touch: var(--touch);
+  --color-risk-high: var(--risk-high);
+  --color-risk-low: var(--risk-low);
+  --color-term: var(--term-bg);
+  --color-term-ink: var(--term-ink);
+  --color-term-muted: var(--term-muted);
+  --color-term-line: var(--term-line);
+  --color-term-hover: var(--term-hover);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  text-rendering: optimizeLegibility;
+}
+
+button {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+:focus-visible {
+  outline: 2px solid var(--touch);
+  outline-offset: 2px;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* a new log line glows briefly, then settles (terminal feel) */
+@keyframes line-in {
+  from {
+    background: rgb(245 165 36 / 0.22);
+    transform: translateY(6px);
+    opacity: 0;
+  }
+  35% {
+    transform: none;
+    opacity: 1;
+  }
+  to {
+    background: transparent;
+  }
+}
+.line-in {
+  animation: line-in 1.4s ease-out;
+}
+
+/* scrubber: native range, styled thumb on top of the alert ticks */
+.scrub {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  width: 100%;
+  height: 44px;
+  margin: 0;
+}
+.scrub::-webkit-slider-runnable-track {
+  height: 44px;
+  background: transparent;
+}
+.scrub::-moz-range-track {
+  height: 44px;
+  background: transparent;
+}
+.scrub::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-top: 11px;
+  border-radius: 999px;
+  background: var(--ink);
+  border: 3px solid var(--surface);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
+}
+.scrub::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--ink);
+  border: 3px solid var(--surface);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line-in {
+    animation: none;
+  }
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
