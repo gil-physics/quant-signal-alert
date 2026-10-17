@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Market data and derived tables (local only, never published)
+/db/
+*.sqlite
+*.parquet
+
+# Data: keep only the result reports (metrics, no raw prices)
+/data/*
+!/data/processed/
+/data/processed/*
+!/data/processed/*_report*.md
+
+# Model weights and artifacts
+/models/
+
+# Runtime logs
+/logs/
+
+# Editor / OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini

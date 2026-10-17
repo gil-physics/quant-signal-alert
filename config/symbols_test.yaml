@@ -1,0 +1,112 @@
+# Step 1: fixed symbol list (no market-cap calculation; codes are pinned here).
+#
+# Rules:
+#   - Never hard-code a symbol code in source files; always load from this file.
+#   - Start with 2 symbols active. Turn on the 3rd for the 3-symbol test.
+#   - Keep this same structure when expanding to 20 symbols.
+
+symbols:
+  - code: "005930"
+    name: "삼성전자"
+    sector: "semiconductor"
+    active: true
+
+  - code: "000660"
+    name: "SK하이닉스"
+    sector: "semiconductor"
+    active: true
+  
+  - code: "396500"
+    name: "TIGER 반도체TOP10"
+    sector: "semiconductor"
+    active: true  
+
+  - code: "402340"
+    name: "SK스퀘어"
+    sector: "auto"
+    active: true
+
+  - code: "005935"
+    name: "삼성전자우"
+    sector: "auto"
+    active: true
+
+  - code: "009150"
+    name: "삼성전기"
+    sector: "auto"
+    active: true
+
+  - code: "005380"
+    name: "현대차"
+    sector: "auto"
+    active: true
+
+  - code: "032830"
+    name: "삼성생명"
+    sector: "auto"
+    active: true
+
+  - code: "373220"
+    name: "LG에너지솔루션"
+    sector: "auto"
+    active: true
+
+  - code: "028260"
+    name: "삼성물산"
+    sector: "auto"
+    active: true
+
+  - code: "329180"
+    name: "HD현대중공업"
+    sector: "auto"
+    active: true
+
+  - code: "207940"
+    name: "삼성바이오로직스"
+    sector: "auto"
+    active: true
+
+  - code: "034020"
+    name: "두산에너빌리티"
+    sector: "auto"
+    active: true
+
+  - code: "000270"
+    name: "기아"
+    sector: "auto"
+    active: true
+
+  - code: "012450"
+    name: "한화에어로스페이스"
+    sector: "auto"
+    active: true
+
+  - code: "105560"
+    name: "KB금융"
+    sector: "auto"
+    active: true
+
+  - code: "012330"
+    name: "현대모비스"
+    sector: "auto"
+    active: true
+
+  - code: "034730"
+    name: "SK"
+    sector: "auto"
+    active: true
+
+  - code: "055550"
+    name: "신한지주"
+    sector: "auto"
+    active: true
+
+  - code: "006400"
+    name: "삼성SDI"
+    sector: "auto"
+    active: true
+
+  - code: "042660"
+    name: "한화오션"
+    sector: "auto"
+    active: true

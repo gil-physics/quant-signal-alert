@@ -1,0 +1,6 @@
+PyQt5
+numpy<2
+pandas==2.0.3
+pyarrow
+python-dateutil
+PyYAML

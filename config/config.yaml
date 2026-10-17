@@ -1,0 +1,43 @@
+# Step 0: project baseline (fixed standards)
+#
+# Data definitions
+#   source data    : 1-minute OHLCV bars (raw)
+#   derived data   : 3-minute, 5-minute bars
+#   training window: 09:00:00 - 15:30:00 (regular session)
+#   raw storage    : 08:00:00 - 20:00:00 (store full range when possible)
+#   model input    : regular-session clean data only
+#   orders         : no automatic ordering
+#   alerts         : at most 1-2 signals per day
+
+session:
+  train_start: "09:00:00"
+  train_end: "15:30:00"
+  raw_start: "08:00:00"
+  raw_end: "20:00:00"
+
+signals:
+  max_signals_per_day: 2
+  cooldown_minutes_per_symbol: 60
+  min_minutes_after_open: 10
+  no_new_signal_minutes_before_close: 30
+
+data:
+  model_source: "al_regular"
+  raw_source: "al_raw"
+  comparison_source: "single_regular"
+
+realtime:
+  # default single-stock target for the realtime trend-signal feed (overridable with --code).
+  default_symbol: "000660"
+
+relative:
+  # Step 9 cross-symbol features. Each "leader" is a symbol whose already-closed
+  # returns are joined onto every symbol's row at the same decision_time as a causal
+  # lead-lag feature (risk model v2.1x). Labels (a, b, ...) name the generated columns
+  # leader_<label>_ret_5m_1m / _20m_1m -- codes live here, never hard-coded in source.
+  # Empty list -> no lead-lag columns are produced.
+  leaders:
+    - label: "a"      # v2.1a: 삼성전자 (broad semiconductor leader)
+      code: "005930"
+    - label: "b"      # v2.1b: SK스퀘어 (holds a large SK하이닉스/000660 stake)
+      code: "402340"
