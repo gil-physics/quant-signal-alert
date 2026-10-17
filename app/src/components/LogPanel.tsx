@@ -159,14 +159,18 @@ export default function LogPanel({ onEnd }: { onEnd: React.ReactNode }) {
             ))}
           </div>
         ) : (
-          <ul className="py-1">
-            {lines.map((e) =>
-              e.kind === "status" ? (
-                <StatusLine key={e.id} e={e} fresh={e.at === idx} />
-              ) : (
-                <EasyLine key={e.id} e={e} fresh={e.at === idx} onTap={select} />
-              ),
-            )}
+          <ul className="pb-1">
+            {lines.map((e, i) => {
+              const hour = e.bar.slice(0, 2);
+              const newHour = i === 0 || lines[i - 1].bar.slice(0, 2) !== hour;
+              const row =
+                e.kind === "status" ? (
+                  <StatusLine key={e.id} e={e} fresh={e.at === idx} />
+                ) : (
+                  <EasyLine key={e.id} e={e} fresh={e.at === idx} onTap={select} />
+                );
+              return newHour ? [<HourMark key={`h${hour}`} hour={hour} />, row] : row;
+            })}
           </ul>
         )}
         {onEnd}
@@ -186,6 +190,37 @@ export default function LogPanel({ onEnd }: { onEnd: React.ReactNode }) {
 }
 
 // ---------------------------------------------------------------- rows
+const DIR_VAR: Record<Dir, string> = { up: "var(--up)", down: "var(--down)", neutral: "var(--neutral)" };
+const TIME_TONE: Record<Dir | "touch", string> = {
+  up: "bg-up/15 text-up",
+  down: "bg-down/15 text-down",
+  neutral: "bg-neutral/15 text-term-ink",
+  touch: "bg-touch/15 text-touch",
+};
+
+/** the line's lead colour: the first alert that points somewhere, else neutral */
+function leadTone(e: PEvent): Dir | "touch" {
+  if (e.kind === "touch") return "touch";
+  return e.dirs.find((d) => d !== "neutral") ?? "neutral";
+}
+
+/** left edge colour bar; split top/bottom when two alerts share the minute */
+function stripe(e: PEvent): string {
+  if (e.kind === "touch") return "var(--touch)";
+  const cols = e.dirs.map((d) => DIR_VAR[d]);
+  if (cols.length < 2) return cols[0] ?? DIR_VAR.neutral;
+  return `linear-gradient(to bottom, ${cols[0]} 50%, ${cols[1]} 50%)`;
+}
+
+function HourMark({ hour }: { hour: string }) {
+  return (
+    <li className="sticky top-0 z-10 flex items-center gap-2 bg-term/95 px-3 pt-3 pb-1.5 backdrop-blur-sm" aria-hidden="true">
+      <span className="font-mono text-[11.5px] font-semibold text-term-muted">{Number(hour)}시</span>
+      <span className="h-px flex-1 bg-term-line" />
+    </li>
+  );
+}
+
 const EasyLine = memo(function EasyLine({
   e,
   fresh,
@@ -196,13 +231,22 @@ const EasyLine = memo(function EasyLine({
   onTap: (id: number) => void;
 }) {
   return (
-    <li className={fresh ? "line-in" : ""}>
+    <li className={`relative border-b border-term-line last:border-b-0 ${fresh ? "line-in" : ""}`}>
+      <span
+        className="absolute inset-y-2 left-0 w-[3px] rounded-r-full"
+        style={{ background: stripe(e) }}
+        aria-hidden="true"
+      />
       <button
         onClick={() => onTap(e.id)}
-        className="flex w-full items-start gap-3 px-3 py-2.5 text-left active:bg-term-hover"
+        className="flex w-full items-start gap-3 py-3 pr-3 pl-4 text-left active:bg-term-hover"
       >
-        <span className="tabular w-11 shrink-0 pt-0.5 font-mono text-[13px] text-term-muted">{e.bar}</span>
-        <div className="min-w-0 flex-1 space-y-1.5">
+        <span
+          className={`tabular shrink-0 rounded-md px-1.5 py-0.5 font-mono text-[12.5px] font-semibold ${TIME_TONE[leadTone(e)]}`}
+        >
+          {e.bar}
+        </span>
+        <div className="min-w-0 flex-1 space-y-2">
           {e.kind === "touch" ? <TouchBody e={e} /> : e.alerts!.map((a, i) => <AlertBody key={i} a={a} />)}
         </div>
         <span className="pt-0.5 text-term-muted" aria-hidden="true">
@@ -288,8 +332,8 @@ const StatusLine = memo(function StatusLine({ e, fresh }: { e: PEvent; fresh: bo
   const l = e.status?.long;
   const s = e.status?.short;
   return (
-    <li className={`flex gap-3 px-3 py-1 text-[12px] text-term-muted ${fresh ? "line-in" : ""}`}>
-      <span className="tabular w-11 shrink-0 font-mono">{e.bar}</span>
+    <li className={`flex gap-3 border-b border-term-line/60 py-1.5 pr-3 pl-4 text-[12px] text-term-muted ${fresh ? "line-in" : ""}`}>
+      <span className="tabular shrink-0 px-1.5 font-mono">{e.bar}</span>
       <span className="min-w-0">
         {l ? `롱 위험 ${l.prob?.toFixed(2) ?? "–"} ${BAND_KO[l.band] ?? ""}` : "롱 준비 중"}
         {s ? ` · 하락 점수 ${s.dn ?? "–"} · 상승 점수 ${s.up ?? "–"}` : ""}

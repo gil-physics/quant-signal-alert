@@ -127,6 +127,19 @@ function AlertMeaning({ a }: { a: Alert }) {
         {grade && ` · ${grade}등급`}
       </p>
       <p className="mt-1.5 text-[16px] leading-relaxed">{meaning}</p>
+      <div className="mt-3 rounded-xl bg-surface px-3 py-2.5">
+        <p className="text-[12px] font-semibold text-muted">모델이 맞히려는 것</p>
+        <p className="mt-0.5 text-[15px] font-semibold leading-snug">
+          {long
+            ? "지금부터 장 마감까지 −1.5% 이상 밀릴지"
+            : "지금부터 장 마감까지 +1.5% 이상 튀어 오를지"}
+        </p>
+        <p className="mt-0.5 text-[12.5px] leading-relaxed text-muted">
+          {long
+            ? "오를지 내릴지를 맞히는 게 아니라, 지금 샀다면 −1.5% 손실 구간까지 내려갈 위험을 매긴 점수예요."
+            : "내릴지를 맞히는 게 아니라, 하방으로 봤을 때 +1.5% 반대로 튀어 오를 위험을 매긴 점수예요."}
+        </p>
+      </div>
       <div className="mt-3 flex items-baseline gap-2">
         <span className="text-[13px] text-muted">{long ? "모델 위험 점수" : "모델 반등 위험 점수"}</span>
         <span className="tabular font-mono text-[18px] font-semibold">{score}</span>
@@ -139,10 +152,7 @@ function AlertMeaning({ a }: { a: Alert }) {
         </span>
       </div>
       <p className="mt-1 text-[13px] leading-relaxed text-muted">
-        {long
-          ? "이 시점부터 장 마감까지 −1.5% 이상 밀릴 위험을 매긴 점수예요."
-          : "이 시점부터 장 마감까지 +1.5% 이상 튀어 오를 위험을 매긴 점수예요."}{" "}
-        0.60 이상은 높음, 0.45 이상은 보통이에요. 확률이 아니라 위험 순위를 나타내요.
+        0.60 이상은 높음, 0.45 이상은 보통이에요. 정확한 확률이 아니라 위험한 순서를 매긴 점수예요.
       </p>
       {agree && <p className="mt-2 text-[14px] font-medium leading-relaxed">{agree}</p>}
       {grade && (
@@ -197,16 +207,19 @@ function TouchMeaning({ e }: { e: PEvent }) {
 }
 
 // ---------------------------------------------------------------- outcome
-function Locked({ until }: { until: string }) {
+function Locked({ title, until, note }: { title: string; until: string; note?: string }) {
   return (
-    <div className="flex items-start gap-3 rounded-2xl border border-dashed border-line p-4">
-      <span aria-hidden="true" className="text-[18px]">
-        🔒
-      </span>
-      <p className="text-[14px] leading-relaxed text-muted">
-        아직 시간이 지나지 않았어요. 재생이 <b className="tabular text-ink">{until}</b>을 지나면 결과가 열려요.
-        시스템도 이 시점에는 미래를 모릅니다.
-      </p>
+    <div className="rounded-2xl border border-dashed border-line p-4">
+      <p className="text-[13px] font-semibold text-muted">{title}</p>
+      <div className="mt-1.5 flex items-start gap-2.5">
+        <span aria-hidden="true" className="text-[17px]">
+          🔒
+        </span>
+        <p className="text-[14px] leading-relaxed text-muted">
+          재생이 <b className="tabular text-ink">{until}</b>을 지나면 열려요.
+          {note ?? " 시스템도 이 시점에는 미래를 모릅니다."}
+        </p>
+      </div>
     </div>
   );
 }
@@ -247,11 +260,12 @@ function Outcome({ e, idx }: { e: PEvent; idx: number }) {
   }
   if (e.kind === "touch") {
     const t = o.touch!;
-    if (idx < (e.revealAt.touch ?? 0)) return <Locked until={t.reveal} />;
+    if (idx < (e.revealAt.touch ?? 0))
+      return <Locked title="모델이 맞히려던 결과 · 그 뒤 10분" until={t.reveal} />;
     const up = e.touch!.direction > 0;
     return (
       <div className="rounded-2xl border border-line p-4">
-        <p className="text-[13px] font-semibold text-muted">그 뒤 10분 동안 실제로는</p>
+        <p className="text-[13px] font-semibold text-muted">모델이 맞히려던 결과 · 그 뒤 10분</p>
         <p className={`mt-1.5 text-[18px] font-bold ${t.hit ? "text-touch" : "text-muted"}`}>
           {t.hit ? `${up ? "+" : "−"}0.5% 터치 ✓` : `${up ? "+" : "−"}0.5%에 닿지 못함`}
         </p>
@@ -261,41 +275,65 @@ function Outcome({ e, idx }: { e: PEvent; idx: number }) {
       </div>
     );
   }
-  const long = e.alerts!.some((a) => a.side === "long");
   const h60 = o.h60;
   const eod = o.eod;
+  const eodOpen = eod && idx >= (e.revealAt.eod ?? Infinity);
   return (
     <div className="space-y-3">
+      {eod &&
+        (eodOpen ? (
+          <div className="rounded-2xl border border-line p-4">
+            <p className="mb-2.5 text-[13px] font-semibold text-muted">모델이 맞히려던 결과 · 장 마감까지</p>
+            <Range w={eod} />
+            <div className="mt-3 space-y-2">
+              {e.alerts!.map((a, i) => (
+                <Verdict key={i} a={a} w={eod} />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <Locked
+            title="모델이 맞히려던 결과 · 장 마감까지"
+            until={eod.reveal}
+            note=" 장 마감까지 지켜봐야 맞았는지 알 수 있어요."
+          />
+        ))}
       {h60 &&
         (idx < (e.revealAt.h60 ?? 0) ? (
-          <Locked until={h60.reveal} />
+          <Locked title={`참고 · 그 뒤 ${h60.full ? "60분" : "장 마감까지"} 움직임`} until={h60.reveal} />
         ) : (
           <div className="rounded-2xl border border-line p-4">
             <p className="mb-2.5 text-[13px] font-semibold text-muted">
-              그 뒤 {h60.full ? "60분" : "장 마감까지"} 실제 움직임 (알림 가격 기준)
+              참고 · 그 뒤 {h60.full ? "60분" : "장 마감까지"} 움직임 (알림 가격 기준)
             </p>
             <Range w={h60} />
           </div>
         ))}
-      {eod && idx >= (e.revealAt.eod ?? Infinity) && (
-        <div className="rounded-2xl border border-line p-4">
-          <p className="mb-2.5 text-[13px] font-semibold text-muted">장 마감까지</p>
-          <Range w={eod} />
-          <p className="mt-2.5 text-[14px] leading-relaxed">
-            {long
-              ? (eod.lo ?? 0) <= -0.015
-                ? "실제로 −1.5% 이상 밀렸어요."
-                : "−1.5%까지는 밀리지 않았어요."
-              : null}
-            {long && e.alerts!.some((a) => a.side === "down") ? " " : ""}
-            {e.alerts!.some((a) => a.side === "down")
-              ? (eod.hi ?? 0) >= 0.015
-                ? "실제로 +1.5% 이상 튀어 올랐어요."
-                : "+1.5%까지는 튀어 오르지 않았어요."
-              : null}
-          </p>
-        </div>
-      )}
+    </div>
+  );
+}
+
+/** did the risk the model scored actually happen by the close? */
+function Verdict({ a, w }: { a: Alert; w: Window }) {
+  const long = a.side === "long";
+  const happened = long ? (w.lo ?? 0) <= -0.015 : (w.hi ?? 0) >= 0.015;
+  const what = long ? "−1.5% 이상 밀림" : "+1.5% 이상 튀어 오름";
+  const band = BAND_KO[a.band] ?? a.band;
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl bg-sunk px-3 py-2.5 text-[14px]">
+      <span className="min-w-0">
+        <span className="text-muted">{long ? "모델 위험" : "모델 반등위험"} </span>
+        <b
+          className={
+            a.band === "HIGH" ? "text-risk-high" : a.band === "LOW" ? "text-risk-low" : "text-ink"
+          }
+        >
+          {band}
+        </b>
+      </span>
+      <span className={`shrink-0 font-semibold ${happened ? "text-ink" : "text-muted"}`}>
+        실제: {happened ? `${what} ✓` : `${what} 없음`}
+      </span>
     </div>
   );
 }
