@@ -15,6 +15,12 @@
 신호·모델 점수는 브라우저나 Hosting 서버에서 다시 계산하지 않는다. `scripts/export_replay_bundle.py`가 실제 러너의 리플레이 코드를 돌려
 결과를 `public/data/`에 JSON으로 저장한다.
 
+배포하면 이 JSON 파일이 Firebase Hosting에 저장된다. 외부 사용자는 링크를 열고
+날짜만 고르면 된다. 브라우저가 목록과 선택한 하루의 JSON을 자동으로 받아
+차트와 신호를 그린다. 사용자가 직접 파일을 저장할 필요는 없지만, 데이터의
+네트워크 전송과 브라우저 캐시는 발생한다. 공개 JSON은 브라우저 개발자 도구
+등에서도 확인할 수 있다.
+
 - 롱·숏 줄: `realtime_long_short_trend_alert.py --cross-symbol`과 같은 객체·같은 `_process_minute` 호출을 캡처.
 - 이평 돌파 줄: `realtime_touch_alert.py`의 `TouchAlertRunner` 기록 + 표본 외(OOF) 5시드 예측으로 매긴 등급.
 - 종목 간 피처는 모델이 학습한 20종목으로 고정한다(나중에 추가된 종목이 과거 피처를 바꾸지 않게).
