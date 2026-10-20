@@ -38,7 +38,7 @@ def _day(symbol, date, specs):
     ])
 
 
-# decision 10:00 -> entry = close of the 10:03 bar (delay 3) = 100.0
+# decision 10:00 -> entry = 10:02 bar close, known at 10:03 (delay 3).
 FALLING_DAY = [
     ("10:00", 100.5, 99.8, 100.2),
     ("10:01", 100.4, 99.9, 100.1),
@@ -80,7 +80,7 @@ class ShortMetricsTests(unittest.TestCase):
         self.assertAlmostEqual(float(r["future_return_eod"]), 97.0 / 100.0 - 1)
         self.assertAlmostEqual(float(r["short_mfe"]), 1 - 96.5 / 100.0)   # positive good
         self.assertGreater(float(r["short_mfe"]), 0)
-        self.assertAlmostEqual(float(r["short_mae"]), 0.0)                # no post-entry high above entry
+        self.assertAlmostEqual(float(r["short_mae"]), 100.2 / 100 - 1)
         self.assertEqual(int(r["down2_60m"]), 1)
         self.assertEqual(int(r["reach_dn15_eod"]), 1)
         self.assertEqual(int(r["short_stop_first"]), 0)
@@ -94,7 +94,7 @@ class ShortMetricsTests(unittest.TestCase):
         ev = evaluate_short_alerts(pd.DataFrame([_alert(dt="2026-01-06 10:00:00", close=100.1)]), bars)
         r = ev.iloc[0]
         self.assertEqual(int(r["short_stop_first"]), 1)
-        self.assertAlmostEqual(float(r["short_mae"]), 0.02)   # max high 102 / entry 100 - 1
+        self.assertAlmostEqual(float(r["short_mae"]), 102 / 100.3 - 1)
         self.assertEqual(int(r["down2_60m"]), 0)
         self.assertEqual(int(r["direction_hit_30m"]), 0)      # positive return = miss
 
@@ -113,15 +113,15 @@ class ShortMetricsTests(unittest.TestCase):
         self.assertEqual(int(r["down2_60m"]), 1)              # the favorable touch happened...
         self.assertEqual(int(r["short_stop_first"]), 1)       # ...but the tie is judged adverse-first
 
-    def test_entry_is_decision_plus_3_bar_close(self):
+    def test_entry_is_close_known_three_minutes_after_decision(self):
         # closes 100..105; the alert's own close (100.0) must NOT be the entry
         specs = [(f"10:0{i}", 100 + i + 1, 100 + i - 0.5, 100 + i) for i in range(6)]
         bars = _day("AAA", "2026-01-07", specs)
         ev = evaluate_short_alerts(pd.DataFrame([_alert(dt="2026-01-07 10:00:00", close=100.0)]), bars)
         r = ev.iloc[0]
         self.assertEqual(int(r["entry_delay_minutes"]), 3)
-        self.assertEqual(float(r["entry_price"]), 103.0)      # close of the 10:03 bar
-        self.assertAlmostEqual(float(r["future_return_eod"]), 105.0 / 103.0 - 1)
+        self.assertEqual(float(r["entry_price"]), 102.0)      # 10:02 bar ends at 10:03
+        self.assertAlmostEqual(float(r["future_return_eod"]), 105.0 / 102.0 - 1)
 
 
 class NoFuturePeekingTests(unittest.TestCase):
@@ -166,6 +166,17 @@ class NoFuturePeekingTests(unittest.TestCase):
 
 
 class BaselineTests(unittest.TestCase):
+    def test_zero_delay_baseline_does_not_use_future_candle_close(self):
+        bars = _day("AAA", "2026-01-06", [
+            ("09:59", 100., 100., 100.),
+            ("10:00", 110., 100., 110.),
+            ("10:01", 110., 110., 110.),
+        ])
+        alerts = pd.DataFrame([_alert()])
+        for evaluate in (baseline_same_time, baseline_same_time_long):
+            result = evaluate(alerts, bars, entry_delay_minutes=0).iloc[0]
+            self.assertAlmostEqual(result["baseline_future_return_60m"], .1)
+
     def test_same_time_baseline_uses_only_other_days(self):
         bars = pd.concat([
             _day("AAA", "2026-01-05", FALLING_DAY),
@@ -177,8 +188,8 @@ class BaselineTests(unittest.TestCase):
         self.assertEqual(len(base), 1)
         r = base.iloc[0]
         self.assertEqual(int(r["baseline_n_days"]), 1)        # own day excluded
-        # rising-day 10:00 entry: close of its 10:03 bar = 100.0, EOD close 101.8
-        self.assertAlmostEqual(float(r["baseline_future_return_60m"]), 101.8 / 100.0 - 1)
+        # At 10:03 the 10:02 bar has closed at 100.3; EOD close is 101.8.
+        self.assertAlmostEqual(float(r["baseline_future_return_60m"]), 101.8 / 100.3 - 1)
         self.assertEqual(int(r["baseline_short_stop_first"]), 1)
         # the alert's own falling day (-3%) never leaks into its baseline
         self.assertGreater(float(r["baseline_future_return_60m"]), 0)
@@ -225,14 +236,14 @@ class LongMetricsTests(unittest.TestCase):
         ev = evaluate_long_alerts(pd.DataFrame([_alert(dt="2026-01-06 10:00:00", close=100.1)]), bars)
         self.assertEqual(len(ev), 1)
         r = ev.iloc[0]
-        self.assertEqual(float(r["entry_price"]), 100.0)
+        self.assertEqual(float(r["entry_price"]), 100.3)
         # raw close returns stay raw: positive = long profit
-        self.assertAlmostEqual(float(r["future_return_60m"]), 101.8 / 100.0 - 1)
-        self.assertAlmostEqual(float(r["future_return_eod"]), 101.8 / 100.0 - 1)
-        self.assertAlmostEqual(float(r["long_mfe"]), 102.0 / 100.0 - 1)  # positive good
+        self.assertAlmostEqual(float(r["future_return_60m"]), 101.8 / 100.3 - 1)
+        self.assertAlmostEqual(float(r["future_return_eod"]), 101.8 / 100.3 - 1)
+        self.assertAlmostEqual(float(r["long_mfe"]), 102.0 / 100.3 - 1)  # positive good
         self.assertGreater(float(r["long_mfe"]), 0)
-        self.assertAlmostEqual(float(r["long_mae"]), 0.0)                # no post-entry low below entry
-        self.assertEqual(int(r["up2_60m"]), 1)                           # high 102.0 >= entry*1.02
+        self.assertAlmostEqual(float(r["long_mae"]), 1 - 99.9 / 100.3)
+        self.assertEqual(int(r["up2_60m"]), 0)                           # high 102 < 100.3*1.02
         self.assertEqual(int(r["reach_up15_eod"]), 1)
         self.assertEqual(int(r["long_stop_first"]), 0)
         for m in (30, 60, 120):

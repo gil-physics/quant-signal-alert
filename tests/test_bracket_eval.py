@@ -85,7 +85,8 @@ class PrepareEntryTests(unittest.TestCase):
     def test_delay0_and_delay3(self):
         by_day = be.day_arrays(self._bars())
         arr = by_day[("AAA", "2026-01-05")]
-        dec = pd.Timestamp("2026-01-05 09:30:00")
+        # The 09:30 candle closes at 09:31, which is decision_time.
+        dec = pd.Timestamp("2026-01-05 09:31:00")
 
         ep, h, l, c, off = be.prepare_entry(arr, dec, 100.0, delay_bars=0)
         self.assertEqual(ep, 100.0)
@@ -100,9 +101,42 @@ class PrepareEntryTests(unittest.TestCase):
     def test_delay_too_large_returns_none(self):
         by_day = be.day_arrays(self._bars())
         arr = by_day[("AAA", "2026-01-05")]
-        dec = pd.Timestamp("2026-01-05 09:30:00")
+        dec = pd.Timestamp("2026-01-05 09:31:00")
         self.assertIsNone(be.prepare_entry(arr, dec, 100.0, delay_bars=4))  # entry=last, no post bar
         self.assertIsNone(be.prepare_entry(arr, dec, 100.0, delay_bars=5))  # no entry bar
+
+    def test_first_future_minute_target_is_not_skipped(self):
+        bars = self._bars()
+        bars.loc[1, ["high", "low", "close"]] = [104, 100, 102]
+        bars.loc[2:, ["high", "low", "close"]] = [101, 98, 99]
+        arr = be.day_arrays(bars)[("AAA", "2026-01-05")]
+        prepared = be.prepare_entry(arr, pd.Timestamp("2026-01-05 09:31"), 100)
+        result = be.simulate_bracket(*prepared, target_pct=.03, stop_pct=.015,
+                                     time_exit_min=1)
+        self.assertEqual(result["outcome"], be.TARGET_FIRST)
+        self.assertEqual(result["exit_offset_min"], 1)
+
+    def test_missing_minutes_do_not_shift_delay_or_horizon(self):
+        arr = be.day_arrays(self._bars().drop(index=1))[("AAA", "2026-01-05")]
+        dec = pd.Timestamp("2026-01-05 09:31")
+        self.assertIsNone(be.prepare_entry(arr, dec, 100, delay_bars=1))
+        prepared = be.prepare_entry(arr, dec, 100)
+        self.assertEqual(list(prepared[-1]), [2., 3., 4.])
+        self.assertIsNone(be.simulate_bracket(*prepared, target_pct=.03,
+                                             stop_pct=.015, time_exit_min=1))
+
+    def test_last_future_bar_is_evaluable_at_zero_delay(self):
+        arr = be.day_arrays(self._bars())[("AAA", "2026-01-05")]
+        prepared = be.prepare_entry(arr, pd.Timestamp("2026-01-05 09:34"), 103)
+        self.assertEqual(len(prepared[1]), 1)
+        self.assertEqual(prepared[-1].tolist(), [1.])
+
+    def test_invalid_delays_rejected(self):
+        arr = be.day_arrays(self._bars())[("AAA", "2026-01-05")]
+        for delay in (-1, .5, True):
+            with self.assertRaises(ValueError):
+                be.prepare_entry(arr, pd.Timestamp("2026-01-05 09:31"),
+                                 100, delay_bars=delay)
 
 
 class SummarizeTests(unittest.TestCase):

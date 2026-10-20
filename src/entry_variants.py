@@ -115,36 +115,23 @@ def select_topk(candidates, *, top_k=2, cooldown_minutes=60):
 def evaluate_entry(day, decision_dt, close_t, *, delay_bars=0, target_pct=TARGET_PCT, stop_pct=STOP_PCT):
     """Evaluate a single signal from its actual entry.
 
-    ``future`` is the bars at/after the decision; future.iloc[0] is the decision
-    bar and its close is the decision close, so the close ``delay_bars`` minutes
-    later is future.iloc[delay_bars].
-
-    delay_bars=0 -> baseline: enter at the decision close (close_t); MFE/MAE/returns
-        span the decision bar and every bar after it (the Step 12 convention).
-    delay_bars=N -> enter N minutes after the decision close, at future.iloc[N]'s
-        close; MFE/MAE/returns span strictly the bars AFTER that entry bar (no
-        look-ahead on the entry bar itself), so the delay comparison is, if
-        anything, conservative against the delay.
+    decision_dt is the signal bar's end; day._dt holds bar starts. Use the same
+    wall-clock delay and future window as bracket_eval.prepare_entry.
     Returns None when the entry bar or the post-entry window is missing.
     """
     import pandas as pd
 
-    future = day[day["_dt"] >= decision_dt].reset_index(drop=True)
-    if delay_bars == 0:
-        if future.empty:
-            return None
-        entry_price = float(close_t)
-        entry_dt = decision_dt
-        eval_bars = future
-    else:
-        if len(future) <= delay_bars:
-            return None
-        entry_bar = future.iloc[delay_bars]
-        entry_price = float(entry_bar["close"])
-        entry_dt = entry_bar["_dt"]
-        eval_bars = future.iloc[delay_bars + 1:].reset_index(drop=True)
-    if eval_bars is None or len(eval_bars) == 0:
+    from bracket_eval import prepare_entry
+
+    day = day.sort_values("_dt").reset_index(drop=True)
+    arr = {"dt": day["_dt"].to_numpy(),
+           **{c: day[c].to_numpy(dtype=float) for c in ("high", "low", "close")}}
+    prepared = prepare_entry(arr, decision_dt, close_t, delay_bars=delay_bars)
+    if prepared is None:
         return None
+    entry_price = prepared[0]
+    entry_dt = decision_dt + pd.Timedelta(minutes=int(delay_bars))
+    eval_bars = day[day["_dt"] >= entry_dt].reset_index(drop=True)
 
     mfe = float(eval_bars["high"].max() / entry_price - 1)
     mae = float(eval_bars["low"].min() / entry_price - 1)

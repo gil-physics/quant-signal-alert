@@ -2,6 +2,11 @@ let openedFromHome = false;
 
 /** Home -> replay: a real history entry, so the phone's back gesture returns home. */
 export function openDate(date: string) {
+  if (dateFromHash()) {
+    // Changing days replaces the replay entry; Back still returns to the home.
+    window.location.replace(`#/d/${date}`);
+    return;
+  }
   openedFromHome = true;
   window.location.hash = `#/d/${date}`;
 }

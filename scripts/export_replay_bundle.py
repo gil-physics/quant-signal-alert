@@ -57,6 +57,7 @@ import realtime_long_short_trend_alert as lsta
 import realtime_touch_alert as rtt
 import realtime_trend_alert as rta
 import replay_export as rx
+from replay_catalog import write_catalog
 import short_entry as se
 import touch_serving as ts
 from config import DB_PATH, PROCESSED_DIR, connect
@@ -413,27 +414,9 @@ def build_bundle(conn, date, symbol, name, universe, models):
 
 
 def write_index(symbol, name, date_labels):
-    entries = []
-    for date in sorted({d for d in date_labels} | {
-            p.parent.name for p in DATA_DIR.glob(f"*/{symbol}.json")}):
-        path = DATA_DIR / date / f"{symbol}.json"
-        if not path.exists():
-            continue
-        b = json.loads(path.read_text(encoding="utf-8"))
-        closes = [bar[4] for bar in b["bars"]]
-        step = max(1, len(closes) // 48)
-        entries.append({
-            "date": date, "label": date_labels.get(date, ""),
-            "change_pct": b["meta"]["change_pct"], "counts": b["meta"]["counts"],
-            "open": b["meta"]["open"], "close": b["meta"]["close"],
-            "prev_close": b["meta"]["prev_close"],
-            "spark": closes[::step] + ([closes[-1]] if (len(closes) - 1) % step else []),
-            "file": f"data/{date}/{symbol}.json",
-        })
-    index = {"version": BUNDLE_VERSION, "symbol": symbol, "name": name, "dates": entries}
-    (DATA_DIR / "index.json").write_text(
-        json.dumps(index, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    print(f"  index -> {DATA_DIR / 'index.json'} ({len(entries)} dates)")
+    index = write_catalog(DATA_DIR, symbol, name, date_labels)
+    print(f"  index -> {DATA_DIR / 'index.json'} "
+          f"({len(index['availableDates'])} dates, {len(index['dates'])} featured)")
 
 
 def parse_args():

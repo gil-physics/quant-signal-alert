@@ -1,9 +1,10 @@
-import { Suspense, lazy, useCallback, useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import type { Bundle, ReplayIndex } from "./types";
 import { prepare } from "./lib/prepare";
 import { useReplay } from "./store";
 import Home from "./components/Home";
-import { dateFromHash, goHome } from "./lib/nav";
+import DateSheet from "./components/DateSheet";
+import { dateFromHash, goHome, openDate } from "./lib/nav";
 
 // the replay screen carries the chart library; load it only when a day is opened
 const Replay = lazy(() => import("./components/Replay"));
@@ -11,74 +12,101 @@ const Replay = lazy(() => import("./components/Replay"));
 export default function App() {
   const [index, setIndex] = useState<ReplayIndex | null>(null);
   const [indexError, setIndexError] = useState(false);
+  const [indexAttempt, setIndexAttempt] = useState(0);
   const [date, setDate] = useState<string | null>(dateFromHash);
   const [dayError, setDayError] = useState(false);
+  const [dayAttempt, setDayAttempt] = useState(0);
+  const [choosingDate, setChoosingDate] = useState(false);
   const load = useReplay((s) => s.load);
   const unload = useReplay((s) => s.unload);
   const data = useReplay((s) => s.data);
-
-  const fetchIndex = useCallback(() => {
-    setIndexError(false);
-    fetch("/data/index.json")
-      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-      .then((j: ReplayIndex) => setIndex(j))
-      .catch(() => setIndexError(true));
-  }, []);
-
-  useEffect(fetchIndex, [fetchIndex]);
+  const available = index?.availableDates ?? index?.dates ?? [];
+  const entry = available.find((d) => d.date === date);
+  const featured = index?.dates.find((d) => d.date === date);
+  const missingDate = !!index && !!date && !entry;
 
   useEffect(() => {
-    const onHash = () => setDate(dateFromHash());
+    const controller = new AbortController();
+    setIndexError(false);
+    // A new key avoids the old service worker returning a six-day catalog.
+    fetch("/data/index.json?v=2", { signal: controller.signal, cache: "no-cache" })
+      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+      .then((j: ReplayIndex) => setIndex(j))
+      .catch(() => !controller.signal.aborted && setIndexError(true));
+    return () => controller.abort();
+  }, [indexAttempt]);
+
+  useEffect(() => {
+    const onHash = () => {
+      setDate(dateFromHash());
+      setChoosingDate(false);
+    };
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
-  const fetchDay = useCallback(() => {
-    if (!date || !index) return;
-    const entry = index.dates.find((d) => d.date === date);
-    if (!entry) {
-      window.location.hash = "#/";
-      return;
-    }
+  useEffect(() => {
+    unload();
     setDayError(false);
-    let cancelled = false;
-    fetch(`/${entry.file}`)
+    if (!date || !entry) return;
+    const controller = new AbortController();
+    fetch(`/${entry.file}`, { signal: controller.signal })
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
-      .then((b: Bundle) => {
-        if (!cancelled) load(prepare(b));
+      .then((bundle: Bundle) => {
+        if (controller.signal.aborted) return;
+        if (bundle.meta.date !== date || bundle.meta.symbol !== index?.symbol) {
+          throw new Error("Replay does not match the selected date/symbol");
+        }
+        load(prepare(bundle));
       })
-      .catch(() => !cancelled && setDayError(true));
-    return () => {
-      cancelled = true;
-    };
-  }, [date, index, load]);
+      .catch(() => !controller.signal.aborted && setDayError(true));
+    return () => controller.abort();
+  }, [date, entry, index?.symbol, dayAttempt, load, unload]);
 
-  useEffect(() => {
-    if (!date) {
-      unload();
-      return;
-    }
-    return fetchDay();
-  }, [date, fetchDay, unload]);
+  const retry = () => {
+    if (indexError) setIndexAttempt((n) => n + 1);
+    else setDayAttempt((n) => n + 1);
+  };
 
-  // warm the cache with the first day so the first tap starts instantly
-  useEffect(() => {
-    if (index?.dates[0]) fetch(`/${index.dates[0].file}`).catch(() => {});
-  }, [index]);
-
-  if (date) {
-    const entry = index?.dates.find((d) => d.date === date);
-    return (
-      <Suspense fallback={<div className="h-dvh bg-term" />}>
-        <Replay
-          ready={!!data && data.bundle.meta.date === date}
-          error={dayError}
-          onRetry={fetchDay}
-          label={entry?.label ?? ""}
-          onBack={goHome}
+  return (
+    <>
+      {date ? (
+        <Suspense fallback={<div className="h-dvh bg-term" />}>
+          <Replay
+            ready={!!data && data.bundle.meta.date === date}
+            error={missingDate
+              ? "이 날짜는 준비된 리플레이가 없어요. 상단에서 다른 날짜를 선택해 주세요."
+              : indexError || dayError
+                ? "이 날짜를 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요."
+                : null}
+            onRetry={missingDate ? undefined : retry}
+            label={featured?.label ?? ""}
+            date={date}
+            name={index?.name ?? ""}
+            datePickerOpen={choosingDate}
+            onChooseDate={available.length ? () => setChoosingDate(true) : undefined}
+            onBack={goHome}
+          />
+        </Suspense>
+      ) : (
+        <Home
+          index={index}
+          error={indexError}
+          onRetry={() => setIndexAttempt((n) => n + 1)}
+          onChooseDate={() => setChoosingDate(true)}
         />
-      </Suspense>
-    );
-  }
-  return <Home index={index} error={indexError} onRetry={fetchIndex} />;
+      )}
+      {choosingDate && available.length > 0 && (
+        <DateSheet
+          dates={available}
+          selected={date}
+          onClose={() => setChoosingDate(false)}
+          onSelect={(nextDate) => {
+            setChoosingDate(false);
+            if (nextDate !== date) openDate(nextDate);
+          }}
+        />
+      )}
+    </>
+  );
 }

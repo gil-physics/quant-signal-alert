@@ -117,34 +117,33 @@ class EvaluateEntryTests(unittest.TestCase):
         day = self._ramp()
         out = ev.evaluate_entry(day, pd.Timestamp("2026-01-05 09:30:00"), 100.0, delay_bars=0)
         self.assertEqual(out["entry_price"], 100.0)
-        self.assertEqual(out["future_bar_count"], 5)            # includes decision bar
+        self.assertEqual(out["future_bar_count"], 5)            # includes first future bar
         self.assertAlmostEqual(out["mfe"], 105 / 100 - 1, places=6)
         self.assertAlmostEqual(out["mae"], 99 / 100 - 1, places=6)
 
     def test_delay1_is_one_minute_after_decision_close(self):
         day = self._ramp()
         out = ev.evaluate_entry(day, pd.Timestamp("2026-01-05 09:30:00"), 100.0, delay_bars=1)
-        # future.iloc[1] is 09:31 (close 101) = 1 minute after the decision close.
-        self.assertEqual(out["entry_price"], 101.0)
+        # 09:30 starts at the decision and closes one minute later, at 09:31.
+        self.assertEqual(out["entry_price"], 100.0)
 
     def test_delay3_is_three_minutes_after_decision_close(self):
         day = self._ramp()
         out = ev.evaluate_entry(day, pd.Timestamp("2026-01-05 09:30:00"), 100.0, delay_bars=3)
-        # future.iloc[3] is 09:33 (close 103) = 3 minutes after the decision close;
-        # eval window is strictly after the entry bar -> 09:34 only.
-        self.assertEqual(out["entry_price"], 103.0)
-        self.assertEqual(out["future_bar_count"], 1)
-        self.assertAlmostEqual(out["mfe"], 105 / 103 - 1, places=6)
-        self.assertAlmostEqual(out["mae"], 103 / 103 - 1, places=6)
+        # 09:32 closes at 09:33, three minutes after decision_time=09:30.
+        self.assertEqual(out["entry_price"], 102.0)
+        self.assertEqual(out["future_bar_count"], 2)
+        self.assertAlmostEqual(out["mfe"], 105 / 102 - 1, places=6)
+        self.assertAlmostEqual(out["mae"], 102 / 102 - 1, places=6)
 
     def test_delay_returns_none_when_not_enough_bars(self):
         day = self._ramp()  # 5 bars at iloc 0..4
-        # delay 4 -> entry at iloc[4] (last bar); no bar left to evaluate -> None.
-        self.assertIsNone(
-            ev.evaluate_entry(day, pd.Timestamp("2026-01-05 09:30:00"), 100.0, delay_bars=4))
-        # delay 5 -> not even an entry bar -> None.
+        # delay 5 -> entry at the last bar's close; no future window remains.
         self.assertIsNone(
             ev.evaluate_entry(day, pd.Timestamp("2026-01-05 09:30:00"), 100.0, delay_bars=5))
+        # delay 6 -> no entry bar.
+        self.assertIsNone(
+            ev.evaluate_entry(day, pd.Timestamp("2026-01-05 09:30:00"), 100.0, delay_bars=6))
 
     def test_stop_first_true_when_stop_precedes_target(self):
         day = _day([

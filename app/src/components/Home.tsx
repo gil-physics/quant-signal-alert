@@ -9,10 +9,12 @@ export default function Home({
   index,
   error,
   onRetry,
+  onChooseDate,
 }: {
   index: ReplayIndex | null;
   error: boolean;
   onRetry: () => void;
+  onChooseDate: () => void;
 }) {
   const [about, setAbout] = useState(false);
   return (
@@ -49,6 +51,26 @@ export default function Home({
           </div>
         )}
 
+        {index && (
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div>
+              <h2 className="text-[15px] font-bold">대표 장세 {index.dates.length}일</h2>
+              <p className="mt-0.5 text-[12px] text-muted">
+                검증한 {(index.availableDates ?? index.dates).length}거래일을 볼 수 있어요
+              </p>
+            </div>
+            <button
+              onClick={onChooseDate}
+              className="flex h-11 shrink-0 items-center gap-2 rounded-xl border border-line bg-surface px-3 text-[14px] font-semibold"
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                <rect x="3" y="5" width="18" height="16" rx="3" />
+                <path d="M7 2v6M17 2v6M3 11h18" />
+              </svg>
+              날짜 선택
+            </button>
+          </div>
+        )}
         <ul className="grid gap-3 sm:grid-cols-2">
           {index
             ? index.dates.map((d) => <DateCard key={d.date} entry={d} />)

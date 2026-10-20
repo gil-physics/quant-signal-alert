@@ -3,10 +3,12 @@
 Shared primitive for the exit sweep (scripts/bracket_exit_sweep.py) and the
 risk-filter diagnostics (scripts/risk_filter_diagnostics.py).
 
-Execution model (intentionally conservative, no look-ahead on the entry bar):
-  * Entry is the close of the bar ``delay_bars`` minutes after the decision; for
-    delay 0 the entry is the decision close itself.
-  * The evaluated window is strictly the bars AFTER the entry bar.
+Execution model (no look-ahead on the entry bar):
+  * decision_dt is the signal bar's END, while arr["dt"] contains bar STARTs.
+    Entry is the close known at decision_dt + delay_bars minutes. For delay 0
+    use close_t; for delay N use the bar starting at decision_dt + N - 1.
+  * Evaluate bars starting AT/AFTER the entry time, including the first future
+    minute. Offsets are elapsed minutes at each evaluated bar's END.
   * First touch wins. A bar that touches BOTH the target and the stop counts as a
     stop (we cannot see intrabar order, so we assume the worst).
   * Target fill = +target_pct, stop fill = -stop_pct (no slippage/gap modelling);
@@ -56,25 +58,30 @@ def prepare_entry(arr, decision_dt, close_t, *, delay_bars=0):
     """Return (entry_price, highs, lows, closes, offsets_min) for the post-entry
     window, or None when there is no entry bar or no bar left after it.
 
-    ``arr`` is one value from :func:`day_arrays`. ``offsets_min`` is minutes from
-    the entry bar's start (first post-entry bar = 1.0).
+    ``arr`` is one value from :func:`day_arrays`. Missing minutes do not shorten
+    the delay or holding period. A missing delayed-entry bar returns None.
     """
     import numpy as np
 
+    if isinstance(delay_bars, bool) or int(delay_bars) != delay_bars or delay_bars < 0:
+        raise ValueError("delay_bars must be a non-negative integer number of minutes")
     dt = arr["dt"]
-    start = int(np.searchsorted(dt, np.datetime64(decision_dt), side="left"))
-    entry_i = start + delay_bars
-    if entry_i >= len(dt):
-        return None
-    entry_price = float(close_t) if delay_bars == 0 else float(arr["close"][entry_i])
-    post_lo = entry_i + 1
+    minute = np.timedelta64(1, "m")
+    entry_dt = np.datetime64(decision_dt) + int(delay_bars) * minute
+    entry_price = float(close_t)
+    if delay_bars:
+        entry_start = entry_dt - minute
+        entry_i = int(np.searchsorted(dt, entry_start, side="left"))
+        if entry_i >= len(dt) or dt[entry_i] != entry_start:
+            return None
+        entry_price = float(arr["close"][entry_i])
+    post_lo = int(np.searchsorted(dt, entry_dt, side="left"))
     if post_lo >= len(dt):
         return None
-    entry_dt = dt[entry_i]
     highs = arr["high"][post_lo:]
     lows = arr["low"][post_lo:]
     closes = arr["close"][post_lo:]
-    offsets = ((dt[post_lo:] - entry_dt) / np.timedelta64(1, "m")).astype(float)
+    offsets = ((dt[post_lo:] + minute - entry_dt) / minute).astype(float)
     return entry_price, highs, lows, closes, offsets
 
 

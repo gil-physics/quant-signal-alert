@@ -86,13 +86,19 @@ export interface Bundle {
     counts: { long: number; down: number; touch: number; touch_graded: number };
     universe: string[];
     models: { long: string; down: string; touch: string };
+    touch_grade_misses?: number;
   };
   bars: Bar[];
   ma: { ma5: (number | null)[]; ma20: (number | null)[] };
   events: ReplayEvent[];
 }
 
-export interface IndexEntry {
+export interface AvailableDate {
+  date: string;
+  file: string;
+}
+
+export interface IndexEntry extends AvailableDate {
   date: string;
   label: string;
   change_pct: number | null;
@@ -109,6 +115,8 @@ export interface ReplayIndex {
   symbol: string;
   name: string;
   dates: IndexEntry[];
+  /** Lightweight availability list. Older cached catalogs contain featured dates only. */
+  availableDates?: AvailableDate[];
 }
 
 export type Filter = "all" | "up" | "down" | "neutral" | "touch";

@@ -37,9 +37,23 @@ export default defineConfig({
             options: { cacheName: "fonts", expiration: { maxEntries: 120 } },
           },
           {
+            urlPattern: ({ url }) => url.pathname === "/data/index.json",
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "replay-catalog",
+              networkTimeoutSeconds: 3,
+              expiration: { maxEntries: 4 },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+          {
             urlPattern: ({ url }) => url.pathname.startsWith("/data/"),
             handler: "StaleWhileRevalidate",
-            options: { cacheName: "replay-data", expiration: { maxEntries: 60 } },
+            options: {
+              cacheName: "replay-data",
+              expiration: { maxEntries: 60 },
+              cacheableResponse: { statuses: [200] },
+            },
           },
         ],
       },

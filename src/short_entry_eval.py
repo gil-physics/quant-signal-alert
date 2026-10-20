@@ -10,9 +10,10 @@ conventions in directional_alert_eval but with the short sign flips:
     (low); a bar touching both counts as stop-first (same conservative tie rule
     as directional_alert_eval._stop_first / bracket_eval.simulate_bracket).
 
-Execution model reuses bracket_eval.prepare_entry: entry = close of the bar
-``entry_delay_minutes`` after the decision (project standard: 3), and every
-metric reads only bars strictly AFTER the entry bar. Selection/gating must
+Execution model reuses bracket_eval.prepare_entry: entry = close known at
+decision_time + ``entry_delay_minutes`` (project standard: 3). decision_time is
+the signal bar's END. Every metric reads bars starting at/after entry time.
+Selection/gating must
 happen upstream (e.g. directional_alert.select_online_alerts) and never reads
 these forward columns.
 
@@ -106,7 +107,7 @@ def _short_stop_first(entry_price, highs, lows):
 
 def _short_metrics(entry_price, highs, lows, closes, offsets):
     """All SHORT_METRIC_COLUMNS for one post-entry window (arrays exclude the
-    entry bar; offsets are minutes from the entry bar start, first bar = 1.0)."""
+    entry bar; offsets measure each future bar's END relative to entry time)."""
     out = {}
     out["future_return_30m"] = _window_return(entry_price, closes, offsets, 30)
     out["future_return_60m"] = _window_return(entry_price, closes, offsets, 60)
@@ -129,8 +130,8 @@ def evaluate_short_alerts(alerts, bars, *, entry_delay_minutes=3):
     ``alerts`` needs columns: symbol, decision_time (str), close. ``bars`` needs
     symbol, bar_start, high, low, close. Any forward-looking columns already on
     the input are ignored and overwritten -- metrics are always recomputed from
-    the bars strictly after the entry bar (entry = close of the decision +
-    ``entry_delay_minutes`` bar via bracket_eval.prepare_entry). Rows without an
+    the bars after entry time (entry = close known at decision_time +
+    ``entry_delay_minutes`` via bracket_eval.prepare_entry). Rows without an
     entry bar or without post-entry bars are dropped.
     """
     if alerts is None or len(alerts) == 0:
@@ -159,6 +160,19 @@ def evaluate_short_alerts(alerts, bars, *, entry_delay_minutes=3):
         out.update(_short_metrics(entry_price, highs, lows, closes, offsets))
         rows.append(out)
     return pd.DataFrame(rows)
+
+
+def _baseline_entry(arr, decision_dt, delay):
+    # At decision_time, only the previous minute's close is known. For a
+    # delayed entry prepare_entry supplies the later close itself.
+    reference = float("nan")
+    if delay == 0:
+        known_start = np.datetime64(decision_dt) - np.timedelta64(1, "m")
+        idx = int(np.searchsorted(arr["dt"], known_start, side="left"))
+        if idx >= len(arr["dt"]) or arr["dt"][idx] != known_start:
+            return None
+        reference = float(arr["close"][idx])
+    return prepare_entry(arr, decision_dt, reference, delay_bars=delay)
 
 
 def baseline_same_time(alerts, bars, *, entry_delay_minutes=3):
@@ -191,14 +205,7 @@ def baseline_same_time(alerts, bars, *, entry_delay_minutes=3):
                 continue
             arr = by_day[(symbol, date)]
             decision_dt = pd.Timestamp(f"{date} {tod}")
-            idx = int(np.searchsorted(arr["dt"], np.datetime64(decision_dt), side="left"))
-            if idx >= len(arr["dt"]):
-                continue
-            # decision close = the bar prepare_entry treats as the decision bar
-            # (side="left"); only consumed when entry_delay_minutes == 0.
-            prep = prepare_entry(
-                arr, decision_dt, float(arr["close"][idx]), delay_bars=entry_delay_minutes,
-            )
+            prep = _baseline_entry(arr, decision_dt, entry_delay_minutes)
             if prep is None:
                 continue
             entry_price, highs, lows, closes, offsets = prep
@@ -316,7 +323,7 @@ def _long_stop_first(entry_price, highs, lows):
 
 def _long_metrics(entry_price, highs, lows, closes, offsets):
     """All LONG_METRIC_COLUMNS for one post-entry window (arrays exclude the
-    entry bar; offsets are minutes from the entry bar start, first bar = 1.0)."""
+    entry bar; offsets measure each future bar's END relative to entry time)."""
     out = {}
     out["future_return_30m"] = _window_return(entry_price, closes, offsets, 30)
     out["future_return_60m"] = _window_return(entry_price, closes, offsets, 60)
@@ -337,7 +344,7 @@ def evaluate_long_alerts(alerts, bars, *, entry_delay_minutes=3):
     """Append LONG_EVAL_COLUMNS to each fired-alert row, computed from ``bars``.
 
     LONG mirror of :func:`evaluate_short_alerts` -- same inputs, same entry
-    convention (entry = close of the decision + ``entry_delay_minutes`` bar via
+    convention (entry = close known at decision_time + ``entry_delay_minutes`` via
     bracket_eval.prepare_entry), same recompute-and-overwrite rule for any
     forward-looking columns already on the input. Rows without an entry bar or
     without post-entry bars are dropped.
@@ -401,14 +408,7 @@ def baseline_same_time_long(alerts, bars, *, entry_delay_minutes=3):
                 continue
             arr = by_day[(symbol, date)]
             decision_dt = pd.Timestamp(f"{date} {tod}")
-            idx = int(np.searchsorted(arr["dt"], np.datetime64(decision_dt), side="left"))
-            if idx >= len(arr["dt"]):
-                continue
-            # decision close = the bar prepare_entry treats as the decision bar
-            # (side="left"); only consumed when entry_delay_minutes == 0.
-            prep = prepare_entry(
-                arr, decision_dt, float(arr["close"][idx]), delay_bars=entry_delay_minutes,
-            )
+            prep = _baseline_entry(arr, decision_dt, entry_delay_minutes)
             if prep is None:
                 continue
             entry_price, highs, lows, closes, offsets = prep

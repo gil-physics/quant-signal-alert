@@ -142,7 +142,7 @@ class ThresholdSweepTests(unittest.TestCase):
         self.assertEqual(int(train["entry_delay"]), 3)
         self.assertEqual(float(train["hit_up2_rate"]), 1.0)
         self.assertEqual(float(train["up3_120m_rate"]), 1.0)
-        self.assertAlmostEqual(float(evaluated.iloc[0]["entry_price"]), 103.0)
+        self.assertAlmostEqual(float(evaluated.iloc[0]["entry_price"]), 102.0)
 
 
 if __name__ == "__main__":

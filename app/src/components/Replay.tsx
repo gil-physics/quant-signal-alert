@@ -22,12 +22,20 @@ export default function Replay({
   onRetry,
   onBack,
   label,
+  date,
+  name,
+  datePickerOpen,
+  onChooseDate,
 }: {
   ready: boolean;
-  error: boolean;
-  onRetry: () => void;
+  error: string | null;
+  onRetry?: () => void;
   onBack: () => void;
   label: string;
+  date: string;
+  name: string;
+  datePickerOpen: boolean;
+  onChooseDate?: () => void;
 }) {
   const [about, setAbout] = useState(false);
   const data = useReplay((s) => s.data);
@@ -40,23 +48,24 @@ export default function Replay({
 
   // the replay clock: one bar per tick, 1x = one minute per second
   useEffect(() => {
-    if (!playing || !ready) return;
+    if (!playing || !ready || datePickerOpen) return;
     const id = window.setInterval(step, 1000 / speed);
     return () => window.clearInterval(id);
-  }, [playing, speed, ready, step]);
+  }, [playing, speed, ready, datePickerOpen, step]);
 
-  useKeyboard(ready);
+  useKeyboard(ready && !datePickerOpen && !about);
 
   if (!ready || !data) {
     return (
-      <Shell onBack={onBack} onAbout={() => setAbout(true)} title="" sub={label}>
+      <Shell onBack={onBack} onAbout={() => setAbout(true)} onChooseDate={onChooseDate}
+        title={`${name ? `${name} · ` : ""}${dateKo(date)}`} sub={label}>
         <div className="flex flex-1 flex-col items-center justify-center gap-4 bg-term p-6 text-center text-term-muted">
           {error ? (
             <>
-              <p className="text-[15px]">이 날짜를 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.</p>
-              <button onClick={onRetry} className="h-11 rounded-xl bg-term-ink px-5 font-semibold text-term">
+              <p className="text-[15px]">{error}</p>
+              {onRetry && <button onClick={onRetry} className="h-11 rounded-xl bg-term-ink px-5 font-semibold text-term">
                 다시 시도
-              </button>
+              </button>}
             </>
           ) : (
             <p className="text-[15px]">그날 장을 불러오는 중…</p>
@@ -77,9 +86,15 @@ export default function Replay({
     <Shell
       onBack={onBack}
       onAbout={() => setAbout(true)}
+      onChooseDate={onChooseDate}
       title={`${meta.name} · ${dateKo(meta.date)}`}
       sub={label}
     >
+      {!!meta.touch_grade_misses && (
+        <p className="bg-sunk px-4 py-2 text-[12px] leading-relaxed text-muted">
+          일부 돌파 알림은 등급 데이터가 없어요. 신호는 그대로 표시해요.
+        </p>
+      )}
       <div className="flex shrink-0 items-end justify-between gap-3 bg-surface px-4 pb-2">
         <div>
           <p className="tabular font-mono text-[30px] leading-none font-semibold tracking-tight" aria-live="off">
@@ -101,7 +116,7 @@ export default function Replay({
 
       <FilterBar />
 
-      <LogPanel onEnd={idx === data.last ? <EndCard onBack={onBack} /> : null} />
+      <LogPanel onEnd={idx === data.last ? <EndCard onBack={onChooseDate ?? onBack} /> : null} />
 
       <Controls />
       <DetailSheet />
@@ -114,12 +129,14 @@ function Shell({
   children,
   onBack,
   onAbout,
+  onChooseDate,
   title,
   sub,
 }: {
   children: React.ReactNode;
   onBack: () => void;
   onAbout: () => void;
+  onChooseDate?: () => void;
   title: string;
   sub: string;
 }) {
@@ -134,10 +151,18 @@ function Shell({
             <path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] font-bold">{title || " "}</p>
-          <p className="truncate text-[12px] text-muted">{sub || " "}</p>
-        </div>
+        <button
+          onClick={onChooseDate}
+          disabled={!onChooseDate}
+          aria-label={`${title} · 날짜 선택`}
+          className="min-w-0 flex-1 rounded-lg py-2 text-left"
+        >
+          <p className="flex items-center gap-1 text-[15px] font-bold">
+            <span className="truncate">{title || " "}</span>
+            <span aria-hidden="true" className="text-muted">⌄</span>
+          </p>
+          <p className="truncate text-[12px] text-muted">{sub || "날짜를 눌러 다른 날 보기"}</p>
+        </button>
         <button onClick={onAbout} aria-label="이 앱이 보여 주는 것" className="flex h-12 w-12 items-center justify-center text-muted">
           <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.8" />
@@ -222,6 +247,7 @@ function useKeyboard(ready: boolean) {
       const s = useReplay.getState();
       if (s.selected !== null || ev.metaKey || ev.ctrlKey || ev.altKey) return;
       const tag = (ev.target as HTMLElement)?.tagName;
+      if (tag === "BUTTON" && ev.key === " ") return;
       if (tag === "INPUT" && ev.key !== " ") return;
       if (ev.key === " ") {
         ev.preventDefault();
