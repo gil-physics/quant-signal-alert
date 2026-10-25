@@ -76,8 +76,8 @@ export default function Chart({
         textColor: p.muted,
         fontFamily: "'Pretendard Variable', system-ui, sans-serif",
         fontSize: 11,
-        // TradingView attribution is shown as text in the About sheet instead
-        attributionLogo: false,
+        // TradingView logo on the chart (license link); the notice text is in the About sheet
+        attributionLogo: true,
       },
       grid: { vertLines: { visible: false }, horzLines: { color: p.line, style: LineStyle.Dotted } },
       rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.12, bottom: 0.08 } },
