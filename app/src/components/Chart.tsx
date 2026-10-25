@@ -3,7 +3,6 @@ import {
   CandlestickSeries,
   ColorType,
   CrosshairMode,
-  LineSeries,
   LineStyle,
   createChart,
   createSeriesMarkers,
@@ -55,8 +54,6 @@ export default function Chart({
   const el = useRef<HTMLDivElement>(null);
   const chart = useRef<IChartApi | null>(null);
   const candles = useRef<ISeriesApi<"Candlestick"> | null>(null);
-  const ma5 = useRef<ISeriesApi<"Line"> | null>(null);
-  const ma20 = useRef<ISeriesApi<"Line"> | null>(null);
   const markers = useRef<ISeriesMarkersPluginApi<Time> | null>(null);
   const drawn = useRef(-1);
 
@@ -79,7 +76,8 @@ export default function Chart({
         textColor: p.muted,
         fontFamily: "'Pretendard Variable', system-ui, sans-serif",
         fontSize: 11,
-        attributionLogo: true,
+        // TradingView attribution is shown as text in the About sheet instead
+        attributionLogo: false,
       },
       grid: { vertLines: { visible: false }, horzLines: { color: p.line, style: LineStyle.Dotted } },
       rightPriceScale: { borderVisible: false, scaleMargins: { top: 0.12, bottom: 0.08 } },
@@ -107,20 +105,6 @@ export default function Chart({
       priceLineVisible: true,
       priceLineStyle: LineStyle.Dashed,
     });
-    ma5.current = c.addSeries(LineSeries, {
-      color: p.touch,
-      lineWidth: 2,
-      priceLineVisible: false,
-      lastValueVisible: false,
-      crosshairMarkerVisible: false,
-    });
-    ma20.current = c.addSeries(LineSeries, {
-      color: p.muted,
-      lineWidth: 2,
-      priceLineVisible: false,
-      lastValueVisible: false,
-      crosshairMarkerVisible: false,
-    });
     markers.current = createSeriesMarkers(candles.current, []);
     chart.current = c;
     drawn.current = -1;
@@ -135,8 +119,6 @@ export default function Chart({
         wickUpColor: q.up,
         wickDownColor: q.down,
       });
-      ma5.current?.applyOptions({ color: q.touch });
-      ma20.current?.applyOptions({ color: q.muted });
     };
     mq.addEventListener("change", retheme);
     return () => {
@@ -149,9 +131,8 @@ export default function Chart({
   // bars: append one at a time while playing, redraw on any jump
   useEffect(() => {
     const cs = candles.current;
-    if (!cs || !ma5.current || !ma20.current || !chart.current) return;
+    if (!cs || !chart.current) return;
     const bars = data.bundle.bars;
-    const { ma5: m5, ma20: m20 } = data.bundle.ma;
     const candle = (i: number) => ({
       time: times[i],
       open: bars[i][1],
@@ -159,17 +140,11 @@ export default function Chart({
       low: bars[i][3],
       close: bars[i][4],
     });
-    const line = (arr: (number | null)[], i: number) =>
-      arr[i] == null ? { time: times[i] } : { time: times[i], value: arr[i] as number };
     if (idx === drawn.current + 1 && idx >= 0) {
       cs.update(candle(idx));
-      ma5.current.update(line(m5, idx));
-      ma20.current.update(line(m20, idx));
     } else if (idx !== drawn.current) {
       const n = idx + 1;
       cs.setData(Array.from({ length: n }, (_, i) => candle(i)));
-      ma5.current.setData(Array.from({ length: n }, (_, i) => line(m5, i)));
-      ma20.current.setData(Array.from({ length: n }, (_, i) => line(m20, i)));
     }
     drawn.current = idx;
     // a 90-minute window (like the runner's live chart): it fills left to right for

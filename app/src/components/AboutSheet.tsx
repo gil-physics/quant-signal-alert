@@ -56,6 +56,18 @@ export default function AboutSheet({ open, onClose }: { open: boolean; onClose: 
               <li>• 알림의 결과는 그 시간이 지나야 열립니다. 시스템도 그 순간에는 미래를 모르기 때문입니다.</li>
               <li>• 교육용 리플레이입니다. 주문을 내지 않으며 투자 권유가 아닙니다.</li>
             </ul>
+            <p className="mt-4 border-t border-line pt-3 text-[12.5px] leading-relaxed text-muted">
+              차트는 TradingView의 오픈소스 라이브러리로 그립니다. TradingView Lightweight Charts™
+              Copyright (c) TradingView, Inc.{" "}
+              <a
+                href="https://www.tradingview.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-ink underline underline-offset-2"
+              >
+                tradingview.com
+              </a>
+            </p>
             <button
               onClick={onClose}
               className="mt-5 h-12 w-full rounded-2xl bg-ink text-[16px] font-semibold text-surface"
