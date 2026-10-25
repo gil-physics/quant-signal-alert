@@ -51,22 +51,11 @@ export default function AboutSheet({ open, onClose }: { open: boolean; onClose: 
               ))}
             </ul>
             <ul className="mt-4 space-y-2 text-[14px] leading-relaxed">
-              <li>• 색은 국내 관례대로 빨강이 상승, 파랑이 하락입니다.</li>
-              <li>• 모든 날짜는 모델이 학습하지 않은 기간이므로 성적이 부풀려지지 않습니다.</li>
-              <li>• 알림의 결과는 그 시간이 지나야 열립니다. 시스템도 그 순간에는 미래를 모르기 때문입니다.</li>
+              <li>• 모든 날짜는 모델이 학습하지 않은 기간입니다.</li>
               <li>• 교육용 리플레이입니다. 주문을 내지 않으며 투자 권유가 아닙니다.</li>
             </ul>
             <p className="mt-4 border-t border-line pt-3 text-[12.5px] leading-relaxed text-muted">
-              차트는 TradingView의 오픈소스 라이브러리로 그립니다. TradingView Lightweight Charts™
-              Copyright (c) TradingView, Inc.{" "}
-              <a
-                href="https://www.tradingview.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-semibold text-ink underline underline-offset-2"
-              >
-                tradingview.com
-              </a>
+              TradingView Lightweight Charts™ Copyright (c) TradingView, Inc.
             </p>
             <button
               onClick={onClose}
