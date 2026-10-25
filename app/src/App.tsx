@@ -75,9 +75,9 @@ export default function App() {
           <Replay
             ready={!!data && data.bundle.meta.date === date}
             error={missingDate
-              ? "이 날짜는 준비된 리플레이가 없어요. 상단에서 다른 날짜를 선택해 주세요."
+              ? "이 날짜에는 준비된 리플레이가 없습니다. 상단에서 다른 날짜를 선택해 주십시오."
               : indexError || dayError
-                ? "이 날짜를 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요."
+                ? "이 날짜를 불러오지 못했습니다. 연결을 확인한 뒤 다시 시도해 주십시오."
                 : null}
             onRetry={missingDate ? undefined : retry}
             label={featured?.label ?? ""}

@@ -92,7 +92,7 @@ export default function Replay({
     >
       {!!meta.touch_grade_misses && (
         <p className="bg-sunk px-4 py-2 text-[12px] leading-relaxed text-muted">
-          일부 돌파 알림은 등급 데이터가 없어요. 신호는 그대로 표시해요.
+          일부 돌파 알림은 등급 데이터가 없습니다. 신호는 그대로 표시합니다.
         </p>
       )}
       <div className="flex shrink-0 items-end justify-between gap-3 bg-surface px-4 pb-2">
@@ -226,7 +226,7 @@ function EndCard({ onBack }: { onBack: () => void }) {
         오늘 알림 롱 {c.long} · 하방 {c.down} · 이평 돌파 {c.touch}
       </p>
       <p className="mt-2 text-[13px] leading-relaxed text-term-muted">
-        이제 모든 알림의 결과가 열렸어요. 지나간 줄을 눌러 그 뒤에 어떻게 됐는지 확인해 보세요.
+        이제 모든 알림의 결과가 열렸습니다. 지나간 줄을 눌러 그 뒤에 어떻게 되었는지 확인해 보십시오.
       </p>
       <div className="mt-3 flex gap-2">
         <button onClick={restart} className="h-11 flex-1 rounded-xl bg-term-ink font-semibold text-term">

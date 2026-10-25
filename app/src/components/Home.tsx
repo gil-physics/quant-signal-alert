@@ -35,13 +35,13 @@ export default function Home({
           </h1>
           <p className="mt-2 text-[15px] leading-relaxed text-muted text-pretty">
             지나간 하루 장을 1분씩 다시 재생합니다. 날짜를 누르면 그날 알림이 터미널 로그처럼
-            쌓이는 모습을 볼 수 있어요.
+            쌓이는 모습을 볼 수 있습니다.
           </p>
         </header>
 
         {error && (
           <div className="rounded-2xl border border-line bg-surface p-5 text-[15px]">
-            <p>날짜 목록을 불러오지 못했어요. 연결을 확인하고 다시 시도해 주세요.</p>
+            <p>날짜 목록을 불러오지 못했습니다. 연결을 확인한 뒤 다시 시도해 주십시오.</p>
             <button
               onClick={onRetry}
               className="mt-3 h-11 rounded-xl bg-ink px-4 font-semibold text-surface"
@@ -56,7 +56,7 @@ export default function Home({
             <div>
               <h2 className="text-[15px] font-bold">대표 장세 {index.dates.length}일</h2>
               <p className="mt-0.5 text-[12px] text-muted">
-                검증한 {(index.availableDates ?? index.dates).length}거래일을 볼 수 있어요
+                검증한 {(index.availableDates ?? index.dates).length}거래일을 볼 수 있습니다
               </p>
             </div>
             <button
@@ -80,7 +80,7 @@ export default function Home({
         <footer className="mt-8 space-y-2 text-[13px] leading-relaxed text-muted">
           <p>
             모든 날짜는 모델이 학습하지 않은 기간입니다. 화면의 알림과 점수는 실제 알림 프로그램을
-            그날 그대로 다시 돌린 결과예요.
+            그날 그대로 다시 돌린 결과입니다.
           </p>
           <p>교육용 리플레이입니다. 주문을 내지 않으며 투자 권유가 아닙니다.</p>
           <button

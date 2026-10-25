@@ -143,8 +143,8 @@ export default function LogPanel({ onEnd }: { onEnd: React.ReactNode }) {
         {!hintDismissed && (
           <div className="m-3 flex items-start gap-3 rounded-xl bg-term-hover p-3 text-[13px] leading-relaxed">
             <p className="min-w-0 flex-1">
-              알림이 1분마다 <b className="text-term-ink">아래에 쌓여요.</b> 줄을 누르면 무슨 뜻인지와
-              <b className="text-term-ink"> 그 뒤에 실제로 어떻게 됐는지</b> 볼 수 있어요.
+              알림이 1분마다 <b className="text-term-ink">아래에 쌓입니다.</b> 줄을 누르면 무슨 뜻인지와
+              <b className="text-term-ink"> 그 뒤에 실제로 어떻게 되었는지</b> 볼 수 있습니다.
             </p>
             <button onClick={dismissHint} aria-label="안내 닫기" className="-m-2 h-10 w-10 shrink-0 text-term-muted">
               ✕

@@ -47,7 +47,7 @@ export default function DateSheet({
             </div>
             <Drawer.Description id="date-description" className="mt-1 text-[13px] leading-relaxed text-muted">
               {sorted[0].replaceAll("-", ".")} – {sorted[sorted.length - 1].replaceAll("-", ".")}
-              <br />검증한 {sorted.length}거래일 · 날짜를 누르면 바로 재생해요.
+              <br />검증한 {sorted.length}거래일 · 날짜를 누르면 바로 재생합니다.
             </Drawer.Description>
             <div className="mt-4 flex items-center justify-between">
               <button
@@ -86,7 +86,7 @@ export default function DateSheet({
                 );
               })}
             </div>
-            <p className="mt-4 text-center text-[12px] text-muted">흐린 날짜는 데이터가 없어요.</p>
+            <p className="mt-4 text-center text-[12px] text-muted">흐린 날짜는 데이터가 없습니다.</p>
           </div>
         </Drawer.Content>
       </Drawer.Portal>

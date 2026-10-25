@@ -4,18 +4,18 @@ import { BAND_KO, DIR_ICON, TOUCH_ICON, fmtPct, type PEvent } from "../lib/prepa
 import { useReplay } from "../store";
 
 const LONG_MEANING: Record<string, string> = {
-  UP_ALERT: "가격이 오를 만한 조건이 모였다는 규칙 신호예요.",
-  UP_CONTINUATION: "오르던 흐름이 이어질 만하다는 규칙 신호예요.",
-  RISK_ALERT: "아래로 밀릴 위험이 커졌다는 규칙 신호예요.",
-  WEAKENING_ALERT: "오르던 힘이 약해지고 있다는 규칙 신호예요.",
-  VOLATILITY_ALERT: "가격이 크게 흔들리기 시작했다는 규칙 신호예요.",
+  UP_ALERT: "가격이 오를 만한 조건이 모였다는 규칙 신호입니다.",
+  UP_CONTINUATION: "오르던 흐름이 이어질 만하다는 규칙 신호입니다.",
+  RISK_ALERT: "아래로 밀릴 위험이 커졌다는 규칙 신호입니다.",
+  WEAKENING_ALERT: "오르던 힘이 약해지고 있다는 규칙 신호입니다.",
+  VOLATILITY_ALERT: "가격이 크게 흔들리기 시작했다는 규칙 신호입니다.",
 };
 const DOWN_MEANING: Record<string, string> = {
-  DOWN_ALERT: "가격이 내려갈 만한 조건이 모였다는 규칙 신호예요.",
-  DOWN_CONTINUATION: "내리던 흐름이 이어질 만하다는 규칙 신호예요.",
-  SHORT_RISK_ALERT: "하방 쪽에서 보면, 반대로 튀어 오를 위험이 커졌다는 신호예요.",
-  DOWN_WEAKENING_ALERT: "내리던 힘이 약해지고 있다는 규칙 신호예요.",
-  VOLATILITY_ALERT: "가격이 크게 흔들리기 시작했다는 규칙 신호예요.",
+  DOWN_ALERT: "가격이 내려갈 만한 조건이 모였다는 규칙 신호입니다.",
+  DOWN_CONTINUATION: "내리던 흐름이 이어질 만하다는 규칙 신호입니다.",
+  SHORT_RISK_ALERT: "하방 쪽에서 보면, 반대로 튀어 오를 위험이 커졌다는 신호입니다.",
+  DOWN_WEAKENING_ALERT: "내리던 힘이 약해지고 있다는 규칙 신호입니다.",
+  VOLATILITY_ALERT: "가격이 크게 흔들리기 시작했다는 규칙 신호입니다.",
 };
 
 export default function DetailSheet() {
@@ -111,13 +111,13 @@ function AlertMeaning({ a }: { a: Alert }) {
   const band = BAND_KO[a.band] ?? a.band;
   let agree = "";
   if (long && (a.type === "UP_ALERT" || a.type === "UP_CONTINUATION")) {
-    if (a.band === "HIGH") agree = "규칙은 위를 봤지만 모델은 위험하다고 봤어요. 위험 필터가 일하는 장면이에요.";
-    if (a.band === "LOW") agree = "규칙과 모델이 모두 괜찮다고 본 경우예요.";
+    if (a.band === "HIGH") agree = "규칙은 위를 봤지만 모델은 위험하다고 봤습니다. 위험 필터가 작동하는 장면입니다.";
+    if (a.band === "LOW") agree = "규칙과 모델이 모두 괜찮다고 본 경우입니다.";
   } else if (long && a.type === "RISK_ALERT" && a.band === "HIGH") {
-    agree = "규칙과 모델이 모두 위험하다고 본 경우예요.";
+    agree = "규칙과 모델이 모두 위험하다고 본 경우입니다.";
   } else if (!long && (a.type === "DOWN_ALERT" || a.type === "DOWN_CONTINUATION")) {
-    if (a.band === "HIGH") agree = "규칙은 아래를 봤지만 모델은 반등 위험이 크다고 봤어요.";
-    if (a.band === "LOW") agree = "규칙과 모델이 모두 하방 쪽에 힘을 실은 경우예요.";
+    if (a.band === "HIGH") agree = "규칙은 아래를 봤지만 모델은 반등 위험이 크다고 봤습니다.";
+    if (a.band === "LOW") agree = "규칙과 모델이 모두 하방 쪽에 힘을 실은 경우입니다.";
   }
   const grade = ["A", "B", "C"].includes(a.grade) ? a.grade : null;
   return (
@@ -136,8 +136,8 @@ function AlertMeaning({ a }: { a: Alert }) {
         </p>
         <p className="mt-0.5 text-[12.5px] leading-relaxed text-muted">
           {long
-            ? "오를지 내릴지를 맞히는 게 아니라, 지금 샀다면 −1.5% 손실 구간까지 내려갈 위험을 매긴 점수예요."
-            : "내릴지를 맞히는 게 아니라, 하방으로 봤을 때 +1.5% 반대로 튀어 오를 위험을 매긴 점수예요."}
+            ? "오를지 내릴지를 맞히는 게 아니라, 지금 샀다면 −1.5% 손실 구간까지 내려갈 위험을 매긴 점수입니다."
+            : "내릴지를 맞히는 게 아니라, 하방으로 봤을 때 +1.5% 반대로 튀어 오를 위험을 매긴 점수입니다."}
         </p>
       </div>
       <div className="mt-3 flex items-baseline gap-2">
@@ -152,11 +152,11 @@ function AlertMeaning({ a }: { a: Alert }) {
         </span>
       </div>
       <p className="mt-1 text-[13px] leading-relaxed text-muted">
-        0.60 이상은 높음, 0.45 이상은 보통이에요. 정확한 확률이 아니라 위험한 순서를 매긴 점수예요.
+        0.60 이상은 높음, 0.45 이상은 보통입니다. 정확한 확률이 아니라 위험한 순서를 매긴 점수입니다.
       </p>
       {agree && <p className="mt-2 text-[14px] font-medium leading-relaxed">{agree}</p>}
       {grade && (
-        <p className="mt-2 text-[13px] text-muted">등급은 A가 조건이 가장 잘 맞은 경우, C가 가장 약한 경우예요.</p>
+        <p className="mt-2 text-[13px] text-muted">등급은 A가 조건이 가장 잘 맞은 경우, C가 가장 약한 경우입니다.</p>
       )}
       {a.reasons.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
@@ -179,27 +179,27 @@ function TouchMeaning({ e }: { e: PEvent }) {
   if (t.grade) {
     gradeText = `CNN 등급 ${t.grade}: 과거 같은 등급의 돌파 ${(t.grade_n ?? 0).toLocaleString(
       "ko-KR",
-    )}건 중 ${Math.round((t.grade_rate ?? 0) * 100)}%가 10분 안에 ${up ? "+" : "−"}0.5%에 닿았어요. 전체 평균은 약 16%예요.`;
+    )}건 중 ${Math.round((t.grade_rate ?? 0) * 100)}%가 10분 안에 ${up ? "+" : "−"}0.5%에 닿았습니다. 전체 평균은 약 16%입니다.`;
   } else if (t.status.startsWith("워밍업")) {
-    gradeText = "장 초반이라 모델 입력(직전 60분 흐름)이 아직 다 모이지 않아 등급을 매기지 않았어요.";
+    gradeText = "장 초반이라 모델 입력(직전 60분 흐름)이 아직 다 모이지 않아 등급을 매기지 않았습니다.";
   } else if (t.status.startsWith("창 불완전")) {
-    gradeText = "장 마감이 가까워 10분 결과를 확인할 수 없어서 등급을 매기지 않았어요.";
+    gradeText = "장 마감이 가까워 10분 결과를 확인할 수 없어서 등급을 매기지 않았습니다.";
   } else {
-    gradeText = "이 돌파에는 등급이 없어요.";
+    gradeText = "이 돌파에는 등급이 없습니다.";
   }
   return (
     <div className="rounded-2xl bg-sunk p-4">
       <p className="text-[13px] font-semibold text-muted">이평 돌파 알림</p>
       <p className="mt-1.5 text-[16px] leading-relaxed">
-        5분 이동평균이 20분 이동평균을 {up ? "위로" : "아래로"} 넘었어요. 돌파 거리는 {bandKo}이에요.
+        5분 이동평균이 20분 이동평균을 {up ? "위로" : "아래로"} 넘었습니다. 돌파 거리는 {bandKo}입니다.
       </p>
       <p className="mt-2 text-[15px] leading-relaxed">{gradeText}</p>
       {t.grade && (
-        <p className="mt-1 text-[13px] text-muted">등급은 그 달을 학습하지 않은 모델이 매긴 점수로 정했어요.</p>
+        <p className="mt-1 text-[13px] text-muted">등급은 그 달을 학습하지 않은 모델이 매긴 점수로 정했습니다.</p>
       )}
       {t.whipsaw && (
         <p className="mt-2 text-[14px] font-medium leading-relaxed text-touch">
-          직전 5분 안에 반대 방향 돌파가 있었어요(휩쏘). 과거 분석에서 이런 재교차는 청산 신호로 쓸 만했어요.
+          직전 5분 안에 반대 방향 돌파가 있었습니다(휩쏘). 과거 분석에서 이런 재교차는 청산 신호로 쓸 만했습니다.
         </p>
       )}
     </div>
@@ -216,7 +216,7 @@ function Locked({ title, until, note }: { title: string; until: string; note?: s
           🔒
         </span>
         <p className="text-[14px] leading-relaxed text-muted">
-          재생이 <b className="tabular text-ink">{until}</b>을 지나면 열려요.
+          재생이 <b className="tabular text-ink">{until}</b>을 지나면 열립니다.
           {note ?? " 시스템도 이 시점에는 미래를 모릅니다."}
         </p>
       </div>
@@ -254,7 +254,7 @@ function Outcome({ e, idx }: { e: PEvent; idx: number }) {
   if (!o) {
     return (
       <p className="rounded-2xl border border-dashed border-line p-4 text-[14px] text-muted">
-        장 마감이 가까워 이후 결과를 잴 수 없는 알림이에요.
+        장 마감이 가까워 이후 결과를 잴 수 없는 알림입니다.
       </p>
     );
   }
@@ -295,7 +295,7 @@ function Outcome({ e, idx }: { e: PEvent; idx: number }) {
           <Locked
             title="모델이 맞히려던 결과 · 장 마감까지"
             until={eod.reveal}
-            note=" 장 마감까지 지켜봐야 맞았는지 알 수 있어요."
+            note=" 장 마감까지 지켜봐야 맞았는지 알 수 있습니다."
           />
         ))}
       {h60 &&
