@@ -6,7 +6,7 @@
 **출처**
 - **Step 12 이후 (2026-06-22 ~ 07-22)**: Claude 메모리 노트 17개. 결정 이유, 수치, 시행착오가 상세히 남아 있음.
 - **Step 0–14 사양**: 사용자가 직접 쓴 단계 사양서 `C:\OpenAPI\step0_1.md` ~ `step14.md` (16개, 2026-06-21 ~ 06-23).
-- **보완**: `README.md`, `QnA.md`, `data/processed/*_report.md`, `models/*.meta.json`.
+- **보완**: `README.md`, `data/processed/*_report.md`, `models/*.meta.json`.
 - Step 0–11은 메모리에 결정 과정이 없어서 사양서와 README 기준으로 적었다.
 
 ---

@@ -35,3 +35,6 @@ desktop.ini
 # Local tool config
 /.claude/
 /.firebase/
+
+# Personal working notes (local only)
+/QnA.md
