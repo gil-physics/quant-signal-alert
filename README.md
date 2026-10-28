@@ -798,7 +798,9 @@ tradable exit), and compares against morning-price baselines (`last_bar_before_1
 **09:10-capable** because the engine seeds `HISTORY_DAYS=8` prior days, so it reflects the
 TRUE first morning 🔔. Do **not** use `directional_alerts` for a "first 🔔" question: that
 offline feed is built from within-day features (60-minute warmup) so it only starts at
-**10:11** and is blind to 09:00–10:00. The fast per-day capture (build features once over
+**10:01** and is blind to 09:00–10:00 (`ret_60m_1m` needs the 09:00 bar plus 60 more, so
+the first complete row is the 10:00 bar, whose `bar_end` is 10:01; `build_features.py`
+drops the incomplete warmup rows). The fast per-day capture (build features once over
 seeded history + the day, then replay the engine's cooldown gate) was verified **identical**
 to bar-by-bar streaming and leakage-free. `risk_prob` is the engine's (single-symbol by
 default; the annotation may differ from the live v1.1 cross-symbol config, but
@@ -822,7 +824,7 @@ with a **PASS / PARTIAL / FAIL** verdict (UP + DOWN). `--risk-as-short` treats R
 only **+0.19% (t≈1.1, not significant)**, and *worse* than a random morning bar (+1.18–1.22%);
 SHORT short_potential +0.68% < baseline +1.10%. Both **FAIL**. ⚠️ This **overturns** the
 earlier result ("first beats baseline, +1.11% vs +1.01%"), which was a **warmup-truncation
-artifact** of the old 10:11-floor `directional_alerts` feed — selecting later, more-confirmed
+artifact** of the old 10:01-floor `directional_alerts` feed — selecting later, more-confirmed
 signals. (Note: "first DIRECTIONAL signal" — on ~66% of days the literal first 🔔 is a
 non-directional WEAKENING/VOLATILITY alert that the study skips.)
 
