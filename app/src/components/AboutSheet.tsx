@@ -53,6 +53,7 @@ export default function AboutSheet({ open, onClose }: { open: boolean; onClose: 
             <ul className="mt-4 space-y-2 text-[14px] leading-relaxed">
               <li>• 모든 날짜는 모델이 학습하지 않은 기간입니다.</li>
               <li>• 교육용 리플레이입니다. 주문을 내지 않으며 투자 권유가 아닙니다.</li>
+              <li>• 방문 통계를 위해 Google Analytics를 사용합니다.</li>
             </ul>
             <p className="mt-4 border-t border-line pt-3 text-[12.5px] leading-relaxed text-muted">
               TradingView Lightweight Charts™ Copyright (c) TradingView, Inc.
